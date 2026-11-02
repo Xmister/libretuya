@@ -3,6 +3,18 @@
 #include "lt_utils.h"
 
 void lt_rand_bytes(uint8_t *buf, size_t len) {
+#if defined(LT_BL60X)
+	// BL602 exposes hardware entropy through the SDK. Do not use libc rand()
+	// for keys, nonces, or other security-sensitive random values.
+	extern int bl_rand(void);
+	while (len) {
+		uint32_t random = (uint32_t)bl_rand();
+		size_t count = len < sizeof(random) ? len : sizeof(random);
+		memcpy(buf, &random, count);
+		buf += count;
+		len -= count;
+	}
+#else
 	int *data = (int *)buf;
 	size_t i;
 	for (i = 0; len >= sizeof(int); len -= sizeof(int)) {
@@ -13,6 +25,7 @@ void lt_rand_bytes(uint8_t *buf, size_t len) {
 		unsigned char *pRem = (unsigned char *)&rem;
 		memcpy(buf + i * sizeof(int), pRem, len);
 	}
+#endif
 }
 
 void hexdump(const uint8_t *buf, size_t len, uint32_t offset, uint8_t width) {
