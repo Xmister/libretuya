@@ -164,3 +164,15 @@ Checking for option value should be done with `#if` (not with `#ifdef`!) - if it
 	- `LT_HEAP_FUNC` - function name used to get available heap size (for `LT_HEAP_I()`)
 	- `LT_REALLOC_FUNC` - function name used for `realloc()` call
 	- `LT_REMALLOC` - use `malloc()` and `memcpy()` in `realloc()` call
+
+## Experimental BL602 platform
+
+The BL602 integration uses the pinned Bouffalo SDK selected by the family
+builder. Use `board = generic-bl602` for generic bring-up or
+`board = sonoff-minir3` for the verified MINIR3 flash layout. The current
+Arduino variant exposes GPIO0 through GPIO16. Board definitions do not prove
+that a pin is available on a particular module.
+
+ESPHome network OTA is available only for the `sonoff-minir3` profile and uses
+its device-specific image wrapper. Generic serial/UF2 upload is not implemented
+for this family. BLE support provides scanning; GATT is unavailable.

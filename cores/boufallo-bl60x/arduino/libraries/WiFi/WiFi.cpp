@@ -168,6 +168,14 @@ bool WiFiClass::modePriv(WiFiMode mode, WiFiModeAction sta_action, WiFiModeActio
     bool ready = d->ready;
     d->mode = mode;
     if (start) d->started = true;
+    if (sta_action == WLMODE_DISABLE) {
+        d->pending_connect = false;
+        d->status = WL_DISCONNECTED;
+    }
+    if (ap_action == WLMODE_DISABLE) {
+        d->pending_ap = false;
+        d->ap_started = false;
+    }
     bool canceled_scan = mode == WIFI_MODE_NULL && d->pending_scan && scan && scan->running;
     if (mode == WIFI_MODE_NULL) {
         d->pending_connect = false;
@@ -193,13 +201,9 @@ bool WiFiClass::modePriv(WiFiMode mode, WiFiModeAction sta_action, WiFiModeActio
         emit_simple(ARDUINO_EVENT_WIFI_STA_START);
     } else if (ready) {
         if (sta_action == WLMODE_DISABLE || mode == WIFI_MODE_NULL) {
-            d->pending_connect = false;
-            d->status = WL_DISCONNECTED;
             wifi_mgmr_sta_disconnect();
         }
         if (ap_action == WLMODE_DISABLE || mode == WIFI_MODE_NULL) {
-            d->pending_ap = false;
-            d->ap_started = false;
             wifi_mgmr_ap_stop(NULL);
         }
     }

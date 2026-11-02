@@ -18,12 +18,6 @@ PinInfo lt_arduino_pin_info_list[PINS_COUNT] = {
     {14, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
     {15, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
     {16, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
-    {17, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
-    {18, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
-    {19, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
-    {20, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
-    {21, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
-    {22, PIN_GPIO | PIN_IRQ, PIN_NONE, 0},
 };
 PinInfo *lt_arduino_pin_gpio_map[PINS_GPIO_MAX + 1] = {
     [0] = &lt_arduino_pin_info_list[0],
@@ -43,10 +37,4 @@ PinInfo *lt_arduino_pin_gpio_map[PINS_GPIO_MAX + 1] = {
     [14] = &lt_arduino_pin_info_list[14],
     [15] = &lt_arduino_pin_info_list[15],
     [16] = &lt_arduino_pin_info_list[16],
-    [17] = &lt_arduino_pin_info_list[17],
-    [18] = &lt_arduino_pin_info_list[18],
-    [19] = &lt_arduino_pin_info_list[19],
-    [20] = &lt_arduino_pin_info_list[20],
-    [21] = &lt_arduino_pin_info_list[21],
-    [22] = &lt_arduino_pin_info_list[22],
 };
