@@ -158,7 +158,7 @@ static void start_pending(WiFiClass *wifi) {
     }
 }
 
-bool WiFiClass::modePriv(WiFiMode mode, WiFiModeAction, WiFiModeAction) {
+bool WiFiClass::modePriv(WiFiMode mode, WiFiModeAction sta_action, WiFiModeAction ap_action) {
     if (mode != WIFI_MODE_NULL && mode != WIFI_MODE_STA && mode != WIFI_MODE_AP && mode != WIFI_MODE_APSTA) return false;
     if (!data && mode == WIFI_MODE_NULL) return true;
     if (!data) dataInitialize();
@@ -191,9 +191,17 @@ bool WiFiClass::modePriv(WiFiMode mode, WiFiModeAction, WiFiModeAction) {
         hal_wifi_start_firmware_task();
         aos_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0);
         emit_simple(ARDUINO_EVENT_WIFI_STA_START);
-    } else if (mode == WIFI_MODE_NULL && ready) {
-        wifi_mgmr_sta_disconnect();
-        wifi_mgmr_ap_stop(NULL);
+    } else if (ready) {
+        if (sta_action == WLMODE_DISABLE || mode == WIFI_MODE_NULL) {
+            d->pending_connect = false;
+            d->status = WL_DISCONNECTED;
+            wifi_mgmr_sta_disconnect();
+        }
+        if (ap_action == WLMODE_DISABLE || mode == WIFI_MODE_NULL) {
+            d->pending_ap = false;
+            d->ap_started = false;
+            wifi_mgmr_ap_stop(NULL);
+        }
     }
     return true;
 }

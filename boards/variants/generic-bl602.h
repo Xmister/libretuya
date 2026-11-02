@@ -1,10 +1,10 @@
 #pragma once
 /* Generic BL602 SDK reference pins; not a MINIR3 pinout. */
-#define PINS_COUNT 17
-#define NUM_DIGITAL_PINS 17
+#define PINS_COUNT 23
+#define NUM_DIGITAL_PINS 23
 #define NUM_ANALOG_INPUTS 0
 #define NUM_ANALOG_OUTPUTS 0
-#define PINS_GPIO_MAX 16
+#define PINS_GPIO_MAX 22
 #define HAS_SERIAL0 1
 #define HAS_SERIAL1 0
 #define HAS_SERIAL2 0
