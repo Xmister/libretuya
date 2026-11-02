@@ -30,10 +30,10 @@
 
 // Modification: Adapt to BouffaloLab compilation environment
 
-//replacement for gcc built-in functions
+// replacement for gcc built-in functions
+#include "FreeRTOS.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include "FreeRTOS.h"
 
 // GCC toolchain will define this pre-processor if "A" extension is supported
 #ifndef __riscv_atomic
@@ -45,27 +45,28 @@
 
 // Single core SoC: atomics can be implemented using portENTER_CRITICAL_NESTED
 // and portEXIT_CRITICAL_NESTED, which disable and enable interrupts.
-#define _ATOMIC_ENTER_CRITICAL() ({ \
-  portENTER_CRITICAL();             \
-  0;                                \
-})
+#define _ATOMIC_ENTER_CRITICAL() \
+	({                           \
+		portENTER_CRITICAL();    \
+		0;                       \
+	})
 
 #define _ATOMIC_EXIT_CRITICAL(state) \
-  do {                               \
-    (void)state;                     \
-    portEXIT_CRITICAL();             \
-  } while (0)
+	do {                             \
+		(void)state;                 \
+		portEXIT_CRITICAL();         \
+	} while (0)
 
 #ifdef __clang__
 // Clang doesn't allow to define "__sync_*" atomics. The workaround is to define function with name "__sync_*_builtin",
-// which implements "__sync_*" atomic functionality and use asm directive to set the value of symbol "__sync_*" to the name
-// of defined function.
+// which implements "__sync_*" atomic functionality and use asm directive to set the value of symbol "__sync_*" to the
+// name of defined function.
 
 #define CLANG_ATOMIC_SUFFIX(name_) name_##_builtin
-#define CLANG_DECLARE_ALIAS(name_)        \
-  __asm__(".type " #name_ ", @function\n" \
-          ".global " #name_ "\n"          \
-          ".equ " #name_ ", " #name_ "_builtin");
+#define CLANG_DECLARE_ALIAS(name_)          \
+	__asm__(".type " #name_ ", @function\n" \
+			".global " #name_ "\n"          \
+			".equ " #name_ ", " #name_ "_builtin");
 
 #else // __clang__
 
@@ -74,119 +75,119 @@
 
 #endif // __clang__
 
-#define ATOMIC_LOAD(n, type)                              \
-  type __atomic_load_##n(const type *mem, int memorder) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();            \
-    type ret = *mem;                                      \
-    _ATOMIC_EXIT_CRITICAL(state);                         \
-    return ret;                                           \
-  }
+#define ATOMIC_LOAD(n, type)                                \
+	type __atomic_load_##n(const type *mem, int memorder) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();          \
+		type ret	   = *mem;                              \
+		_ATOMIC_EXIT_CRITICAL(state);                       \
+		return ret;                                         \
+	}
 
-#define ATOMIC_STORE(n, type)                                  \
-  void __atomic_store_##n(type *mem, type val, int memorder) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                 \
-    *mem = val;                                                \
-    _ATOMIC_EXIT_CRITICAL(state);                              \
-  }
+#define ATOMIC_STORE(n, type)                                    \
+	void __atomic_store_##n(type *mem, type val, int memorder) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();               \
+		*mem		   = val;                                    \
+		_ATOMIC_EXIT_CRITICAL(state);                            \
+	}
 
-#define ATOMIC_EXCHANGE(n, type)                                  \
-  type __atomic_exchange_##n(type *mem, type val, int memorder) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                    \
-    type ret = *mem;                                              \
-    *mem = val;                                                   \
-    _ATOMIC_EXIT_CRITICAL(state);                                 \
-    return ret;                                                   \
-  }
+#define ATOMIC_EXCHANGE(n, type)                                    \
+	type __atomic_exchange_##n(type *mem, type val, int memorder) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                  \
+		type ret	   = *mem;                                      \
+		*mem		   = val;                                       \
+		_ATOMIC_EXIT_CRITICAL(state);                               \
+		return ret;                                                 \
+	}
 
-#define CMP_EXCHANGE(n, type)                                                                                      \
-  bool __atomic_compare_exchange_##n(type *mem, type *expect, type desired, bool weak, int success, int failure) { \
-    bool ret = false;                                                                                              \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                                                                     \
-    if (*mem == *expect) {                                                                                         \
-      ret = true;                                                                                                  \
-      *mem = desired;                                                                                              \
-    } else {                                                                                                       \
-      *expect = *mem;                                                                                              \
-    }                                                                                                              \
-    _ATOMIC_EXIT_CRITICAL(state);                                                                                  \
-    return ret;                                                                                                    \
-  }
+#define CMP_EXCHANGE(n, type)                                                                                        \
+	bool __atomic_compare_exchange_##n(type *mem, type *expect, type desired, bool weak, int success, int failure) { \
+		bool ret	   = false;                                                                                      \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                                                                   \
+		if (*mem == *expect) {                                                                                       \
+			ret	 = true;                                                                                             \
+			*mem = desired;                                                                                          \
+		} else {                                                                                                     \
+			*expect = *mem;                                                                                          \
+		}                                                                                                            \
+		_ATOMIC_EXIT_CRITICAL(state);                                                                                \
+		return ret;                                                                                                  \
+	}
 
-#define FETCH_ADD(n, type)                                           \
-  type __atomic_fetch_add_##n(type *ptr, type value, int memorder) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                       \
-    type ret = *ptr;                                                 \
-    *ptr = *ptr + value;                                             \
-    _ATOMIC_EXIT_CRITICAL(state);                                    \
-    return ret;                                                      \
-  }
+#define FETCH_ADD(n, type)                                             \
+	type __atomic_fetch_add_##n(type *ptr, type value, int memorder) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                     \
+		type ret	   = *ptr;                                         \
+		*ptr		   = *ptr + value;                                 \
+		_ATOMIC_EXIT_CRITICAL(state);                                  \
+		return ret;                                                    \
+	}
 
-#define FETCH_SUB(n, type)                                           \
-  type __atomic_fetch_sub_##n(type *ptr, type value, int memorder) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                       \
-    type ret = *ptr;                                                 \
-    *ptr = *ptr - value;                                             \
-    _ATOMIC_EXIT_CRITICAL(state);                                    \
-    return ret;                                                      \
-  }
+#define FETCH_SUB(n, type)                                             \
+	type __atomic_fetch_sub_##n(type *ptr, type value, int memorder) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                     \
+		type ret	   = *ptr;                                         \
+		*ptr		   = *ptr - value;                                 \
+		_ATOMIC_EXIT_CRITICAL(state);                                  \
+		return ret;                                                    \
+	}
 
-#define FETCH_AND(n, type)                                           \
-  type __atomic_fetch_and_##n(type *ptr, type value, int memorder) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                       \
-    type ret = *ptr;                                                 \
-    *ptr = *ptr & value;                                             \
-    _ATOMIC_EXIT_CRITICAL(state);                                    \
-    return ret;                                                      \
-  }
+#define FETCH_AND(n, type)                                             \
+	type __atomic_fetch_and_##n(type *ptr, type value, int memorder) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                     \
+		type ret	   = *ptr;                                         \
+		*ptr		   = *ptr & value;                                 \
+		_ATOMIC_EXIT_CRITICAL(state);                                  \
+		return ret;                                                    \
+	}
 
-#define FETCH_OR(n, type)                                           \
-  type __atomic_fetch_or_##n(type *ptr, type value, int memorder) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                      \
-    type ret = *ptr;                                                \
-    *ptr = *ptr | value;                                            \
-    _ATOMIC_EXIT_CRITICAL(state);                                   \
-    return ret;                                                     \
-  }
+#define FETCH_OR(n, type)                                             \
+	type __atomic_fetch_or_##n(type *ptr, type value, int memorder) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                    \
+		type ret	   = *ptr;                                        \
+		*ptr		   = *ptr | value;                                \
+		_ATOMIC_EXIT_CRITICAL(state);                                 \
+		return ret;                                                   \
+	}
 
-#define FETCH_XOR(n, type)                                           \
-  type __atomic_fetch_xor_##n(type *ptr, type value, int memorder) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                       \
-    type ret = *ptr;                                                 \
-    *ptr = *ptr ^ value;                                             \
-    _ATOMIC_EXIT_CRITICAL(state);                                    \
-    return ret;                                                      \
-  }
+#define FETCH_XOR(n, type)                                             \
+	type __atomic_fetch_xor_##n(type *ptr, type value, int memorder) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                     \
+		type ret	   = *ptr;                                         \
+		*ptr		   = *ptr ^ value;                                 \
+		_ATOMIC_EXIT_CRITICAL(state);                                  \
+		return ret;                                                    \
+	}
 
-#define SYNC_FETCH_OP(op, n, type)                                                \
-  type CLANG_ATOMIC_SUFFIX(__sync_fetch_and_##op##_##n)(type * ptr, type value) { \
-    return __atomic_fetch_##op##_##n(ptr, value, __ATOMIC_SEQ_CST);               \
-  }                                                                               \
-  CLANG_DECLARE_ALIAS(__sync_fetch_and_##op##_##n)
+#define SYNC_FETCH_OP(op, n, type)                                                  \
+	type CLANG_ATOMIC_SUFFIX(__sync_fetch_and_##op##_##n)(type * ptr, type value) { \
+		return __atomic_fetch_##op##_##n(ptr, value, __ATOMIC_SEQ_CST);             \
+	}                                                                               \
+	CLANG_DECLARE_ALIAS(__sync_fetch_and_##op##_##n)
 
-#define SYNC_BOOL_CMP_EXCHANGE(n, type)                                                              \
-  bool CLANG_ATOMIC_SUFFIX(__sync_bool_compare_and_swap_##n)(type * ptr, type oldval, type newval) { \
-    bool ret = false;                                                                                \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                                                       \
-    if (*ptr == oldval) {                                                                            \
-      *ptr = newval;                                                                                 \
-      ret = true;                                                                                    \
-    }                                                                                                \
-    _ATOMIC_EXIT_CRITICAL(state);                                                                    \
-    return ret;                                                                                      \
-  }                                                                                                  \
-  CLANG_DECLARE_ALIAS(__sync_bool_compare_and_swap_##n)
+#define SYNC_BOOL_CMP_EXCHANGE(n, type)                                                                \
+	bool CLANG_ATOMIC_SUFFIX(__sync_bool_compare_and_swap_##n)(type * ptr, type oldval, type newval) { \
+		bool ret	   = false;                                                                        \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                                                     \
+		if (*ptr == oldval) {                                                                          \
+			*ptr = newval;                                                                             \
+			ret	 = true;                                                                               \
+		}                                                                                              \
+		_ATOMIC_EXIT_CRITICAL(state);                                                                  \
+		return ret;                                                                                    \
+	}                                                                                                  \
+	CLANG_DECLARE_ALIAS(__sync_bool_compare_and_swap_##n)
 
-#define SYNC_VAL_CMP_EXCHANGE(n, type)                                                              \
-  type CLANG_ATOMIC_SUFFIX(__sync_val_compare_and_swap_##n)(type * ptr, type oldval, type newval) { \
-    unsigned state = _ATOMIC_ENTER_CRITICAL();                                                      \
-    type ret = *ptr;                                                                                \
-    if (*ptr == oldval) {                                                                           \
-      *ptr = newval;                                                                                \
-    }                                                                                               \
-    _ATOMIC_EXIT_CRITICAL(state);                                                                   \
-    return ret;                                                                                     \
-  }                                                                                                 \
-  CLANG_DECLARE_ALIAS(__sync_val_compare_and_swap_##n)
+#define SYNC_VAL_CMP_EXCHANGE(n, type)                                                                \
+	type CLANG_ATOMIC_SUFFIX(__sync_val_compare_and_swap_##n)(type * ptr, type oldval, type newval) { \
+		unsigned state = _ATOMIC_ENTER_CRITICAL();                                                    \
+		type ret	   = *ptr;                                                                        \
+		if (*ptr == oldval) {                                                                         \
+			*ptr = newval;                                                                            \
+		}                                                                                             \
+		_ATOMIC_EXIT_CRITICAL(state);                                                                 \
+		return ret;                                                                                   \
+	}                                                                                                 \
+	CLANG_DECLARE_ALIAS(__sync_val_compare_and_swap_##n)
 
 #if !HAS_ATOMICS_32
 

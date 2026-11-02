@@ -9,7 +9,7 @@ void lt_rand_bytes(uint8_t *buf, size_t len) {
 	extern int bl_rand(void);
 	while (len) {
 		uint32_t random = (uint32_t)bl_rand();
-		size_t count = len < sizeof(random) ? len : sizeof(random);
+		size_t count	= len < sizeof(random) ? len : sizeof(random);
 		memcpy(buf, &random, count);
 		buf += count;
 		len -= count;

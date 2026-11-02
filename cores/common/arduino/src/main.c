@@ -9,7 +9,8 @@ int main() {
 #endif
 	// initialize Arduino framework
 #if defined(LT_BL60X)
-	if (lt_init_arduino) lt_init_arduino();
+	if (lt_init_arduino)
+		lt_init_arduino();
 #else
 	lt_init_arduino();
 #endif

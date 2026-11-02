@@ -19,7 +19,8 @@ int lt_main(void) {
 	// early initialize the family and variant
 #if defined(LT_BL60X)
 	lt_bl602_early_init();
-	if (lt_init_variant) lt_init_variant();
+	if (lt_init_variant)
+		lt_init_variant();
 #else
 	lt_init_family();
 	lt_init_variant();

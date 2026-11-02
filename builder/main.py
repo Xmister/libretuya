@@ -100,7 +100,7 @@ else:
         )
     else:
         target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
-        env.Depends(target_uf2, "checkprogsize")
+    env.Depends(target_uf2, "checkprogsize")
 
 AlwaysBuild(env.Alias("nobuild", target_uf2))
 target_buildprog = env.Alias("buildprog", target_uf2, target_uf2)

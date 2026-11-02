@@ -140,10 +140,14 @@ queue.AppendPublic(
         "-Wl,--build-id=none",
         "-Wl,--cref",
         "-Wl,--gc-sections",
-        *([] if family.short_name == "BL60X" else [
-            "-Wl,--no-enum-size-warning",
-            "-Wl,--no-wchar-size-warning",
-        ]),
+        *(
+            []
+            if family.short_name == "BL60X"
+            else [
+                "-Wl,--no-enum-size-warning",
+                "-Wl,--no-wchar-size-warning",
+            ]
+        ),
         "-Wl,--no-undefined",
         "-Wl,--warn-common",
         # malloc.c wrappers

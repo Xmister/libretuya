@@ -4,7 +4,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct { uint32_t device; uint8_t button; uint8_t action; } sonoff_event;
+typedef struct {
+	uint32_t device;
+	uint8_t button;
+	uint8_t action;
+} sonoff_event;
+
 /* uuid2, uuid3 and uuid4 are decoded 32-bit service UUID values; caller must
  * validate advertisement structure and the 0x78f6 marker before calling.
  * Returns 1 on a single match, 0 on no match, -1 on ambiguous match. */
