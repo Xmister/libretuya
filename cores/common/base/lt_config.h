@@ -127,6 +127,10 @@
 #define LT_DEBUG_MDNS LT_DEBUG_ALL
 #endif
 
+#ifndef LT_DEBUG_BLE
+#define LT_DEBUG_BLE LT_DEBUG_ALL
+#endif
+
 #ifndef LT_DEBUG_LWIP
 #define LT_DEBUG_LWIP 0
 #endif

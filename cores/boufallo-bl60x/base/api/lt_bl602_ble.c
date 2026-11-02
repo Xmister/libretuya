@@ -1,7 +1,7 @@
 /* Experimental BL602 scanner. Callbacks execute in the SDK BLE task. */
+#include <libretiny.h>
 #include "lt_bl602_ble.h"
 #include <errno.h>
-#include <stdio.h>
 #include <string.h>
 #include <FreeRTOS.h>
 #include <bluetooth.h>
@@ -32,17 +32,17 @@ static int begin_scan(void) {
         .interval = scan_config.interval,
         .window = scan_config.window,
     };
-    printf("[BLEDBG] bt_le_scan_start enter\r\n");
+    LT_DM(BLE, "[BLEDBG] bt_le_scan_start enter");
     int error = bt_le_scan_start(&params, scan_found);
-    printf("[BLEDBG] bt_le_scan_start exit=%d\r\n", error);
+    LT_DM(BLE, "[BLEDBG] bt_le_scan_start exit=%d", error);
     __atomic_store_n(&state, error ? IDLE : SCANNING, __ATOMIC_RELEASE);
     return error;
 }
 static void stack_ready(int error) {
-    printf("[BLEDBG] bt_enable callback enter=%d\r\n", error);
+    LT_DM(BLE, "[BLEDBG] bt_enable callback enter=%d", error);
     if (error) __atomic_store_n(&state, FAILED, __ATOMIC_RELEASE);
     else __atomic_store_n(&state, IDLE, __ATOMIC_RELEASE);
-    printf("[BLEDBG] bt_enable callback exit=%d\r\n", error);
+    LT_DM(BLE, "[BLEDBG] bt_enable callback exit=%d", error);
     if (on_ready) on_ready(error);
 }
 
@@ -53,13 +53,13 @@ int bl602_ble_prepare(bl602_scan_ready_callback ready) {
                                      __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
         return expected == IDLE || expected == SCANNING ? 0 : -EALREADY;
     on_ready = ready;
-    printf("[BLEDBG] prepare controller priority=%u\r\n", (unsigned)(configMAX_PRIORITIES - 1));
+    LT_DM(BLE, "[BLEDBG] prepare controller priority=%u", (unsigned)(configMAX_PRIORITIES - 1));
     ble_controller_init(configMAX_PRIORITIES - 1);
-    printf("[BLEDBG] controller initialized\r\n");
+    LT_DM(BLE, "[BLEDBG] controller initialized");
     hci_driver_init();
-    printf("[BLEDBG] HCI initialized\r\n");
+    LT_DM(BLE, "[BLEDBG] HCI initialized");
     int error = bt_enable(stack_ready);
-    printf("[BLEDBG] bt_enable returned=%d\r\n", error);
+    LT_DM(BLE, "[BLEDBG] bt_enable returned=%d", error);
     if (error) __atomic_store_n(&state, FAILED, __ATOMIC_RELEASE);
     return error;
 }
@@ -85,9 +85,9 @@ int bl602_scan_start_configured(const bl602_scan_config *config,
     on_advertisement = callback;
     __atomic_store_n(&controller_reports, 0, __ATOMIC_RELAXED);
     (void) ready;  /* Stack readiness is reported by bl602_ble_prepare(). */
-    printf("[BLEDBG] scan config interval=%u window=%u active=%u\r\n", config->interval, config->window,
+    LT_DM(BLE, "[BLEDBG] scan config interval=%u window=%u active=%u", config->interval, config->window,
            config->active);
-    printf("[BLEDBG] PTA left under SDK control\r\n");
+    LT_DM(BLE, "[BLEDBG] PTA left under SDK control");
     int error = begin_scan();
     return error;
 }

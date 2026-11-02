@@ -85,6 +85,7 @@ To see debug messages from i.e. OTA, loglevel must also be changed.
 - `LT_DEBUG_OTA` (1) - OTA updates (`Update` library)
 - `LT_DEBUG_FDB` (0) - FlashDB debugging (macros within the library)
 - `LT_DEBUG_MDNS` (0) - mDNS client library
+- `LT_DEBUG_BLE` (`LT_DEBUG_ALL`) - BL602 Bluetooth Low Energy controller and scan diagnostics
 - `LT_DEBUG_LWIP` (0) - enables `LWIP_DEBUG`, provides `LWIP_PLATFORM_DIAG`; per-module options (i.e. `TCP_DEBUG`) are off by default and need to be enabled separately - see example in `Project options` above
 - `LT_DEBUG_LWIP_ASSERT` (0) - enables assertions within lwIP (doesn't need `LT_DEBUG_LWIP`)
 
