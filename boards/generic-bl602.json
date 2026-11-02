@@ -1,0 +1,36 @@
+{
+  "name": "Generic BL602 (experimental, 2 MB reference layout)",
+  "vendor": "Bouffalo Lab",
+  "url": "https://www.bouffalolab.com/",
+  "build": {
+    "family": "BL60X",
+    "mcu": "bl602",
+    "variant": "generic-bl602",
+    "f_cpu": "160000000L",
+    "prefix": "riscv64-unknown-elf-",
+    "ldscript": "flash_rom.ld"
+  },
+  "flash": {
+    "boot": "0x000000+0x00e000",
+    "part_table": "0x00e000+0x002000",
+    "app": "0x010000+0x0c8000",
+    "ota": "0x0d8000+0x088000",
+    "mfg": "0x160000+0x10000",
+    "media": "0x170000+0x79000",
+    "psm": "0x1e9000+0x8000",
+    "key": "0x1f1000+0x2000",
+    "data": "0x1f3000+0x5000",
+    "factory": "0x1f8000+0x8000"
+  },
+  "connectivity": [
+    "wifi",
+    "ble"
+  ],
+  "upload": {
+    "maximum_size": 819200,
+    "maximum_ram_size": 276480,
+    "flash_size": 2097152,
+    "require_upload_port": true,
+    "protocol": "custom"
+  }
+}

@@ -41,19 +41,25 @@ def env_add_core_sources(env: Environment, queue, name: str, path: str) -> bool:
         env.LoadDefines(join(path, "lt_defs.h"))
     except FileNotFoundError:
         pass
+    core_srcs = [
+        "+<*.c*>",
+        "+<api/*.c>",
+        "+<common/*.c*>",
+        "+<compat/*.c*>",
+        "+<port/*.c*>",
+        "+<posix/*.c>",
+        "+<wiring/*.c*>",
+        "+<wraps/*.c>",
+    ]
+    if name == "bl60x":
+        # Atomic helper definitions must be compiled outside LTO; otherwise
+        # GCC treats their reserved __atomic_* names as intrinsics and drops
+        # the software fallback symbols.
+        core_srcs.append("-<api/lt_bl602_atomics.c>")
     queue.AddLibrary(
         name=f"core_{name}",
         base_dir=path,
-        srcs=[
-            "+<*.c*>",
-            "+<api/*.c>",
-            "+<common/*.c*>",
-            "+<compat/*.c*>",
-            "+<port/*.c*>",
-            "+<posix/*.c>",
-            "+<wiring/*.c*>",
-            "+<wraps/*.c>",
-        ],
+        srcs=core_srcs,
         includes=[
             # prepend the paths before SDK directories
             "!<.>",
@@ -63,6 +69,13 @@ def env_add_core_sources(env: Environment, queue, name: str, path: str) -> bool:
             "!<wiring>",
         ],
     )
+    if name == "bl60x":
+        queue.AddLibrary(
+            name="bl602_atomic_fallback",
+            base_dir=join(path, "api"),
+            srcs=["+<lt_bl602_atomics.c>"],
+            options={"CCFLAGS": ["-fno-lto"]},
+        )
     queue.AddLibrary(
         name=f"core_{name}_fixups",
         base_dir=path,

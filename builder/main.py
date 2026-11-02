@@ -90,8 +90,17 @@ if "nobuild" in COMMAND_LINE_TARGETS:
     env["UF2OTA"] = "dummy"  # forcefully allow uploading using ltchiptool
 else:
     target_elf = env.BuildProgram()
-    target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
-    env.Depends(target_uf2, "checkprogsize")
+    if env["FAMILY_OBJ"].short_name == "BL60X":
+        # BL602 emits a raw application image without bootinfo. ESPHome adds
+        # the verified board boot header and OTA wrapper in its platform hook.
+        target_uf2 = env.Command(
+            join("${BUILD_DIR}", "firmware.bin"),
+            target_elf,
+            "$OBJCOPY -O binary --gap-fill 0xff -S $SOURCE $TARGET",
+        )
+    else:
+        target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
+        env.Depends(target_uf2, "checkprogsize")
 
 AlwaysBuild(env.Alias("nobuild", target_uf2))
 target_buildprog = env.Alias("buildprog", target_uf2, target_uf2)

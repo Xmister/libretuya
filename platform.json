@@ -125,13 +125,28 @@
         "~1.50401.0",
         "~1.90301.0",
         "~1.100301.0"
-      ]
+      ],
+      "optional": true
     },
     "tool-openocd": {
       "type": "uploader",
       "optional": true,
       "owner": "platformio",
       "version": "~2.1100.0"
+    },
+    "framework-bouffalo-bl602": {
+      "type": "framework",
+      "optional": true,
+      "version": "https://github.com/Ishu1519/BL602-Arduino-Core.git#2f1db433bc832b7aa8cc3d427527d48e66bcce29",
+      "toolchains": {
+        "any": "riscv@~1.130200.2"
+      }
+    },
+    "toolchain-riscv": {
+      "type": "toolchain",
+      "optional": true,
+      "owner": "platformio",
+      "version": "~1.130200.2"
     }
   }
 }

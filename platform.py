@@ -124,6 +124,21 @@ class LibretinyPlatform(PlatformBase):
         board = self.get_boards(options.get("board"))
         package = board.get("package")
         package_obj = self.packages.get(package, {})
+        # The pinned BL602 SDK upstream is an Arduino core rather than a
+        # PlatformIO package. Prepare a local, versioned wrapper before PIO's
+        # package manager runs. Explicit platform_packages overrides win.
+        if package == "framework-bouffalo-bl602" and not any(
+            item.split("@", 1)[0].strip().endswith(package)
+            for item in options.get("platform_packages", [])
+        ):
+            from bl602_sdk_package import prepare
+
+            sdk_path = prepare(
+                self.config.get("platformio", "core_dir"),
+                os.environ.get("BL602_SDK_CHECKOUT"),
+            )
+            package_obj["version"] = sdk_path.as_uri()
+
         # mark framework SDK as required
         package_obj["optional"] = False
 
@@ -149,6 +164,7 @@ class LibretinyPlatform(PlatformBase):
                 )
             toolchain, version = toolchain_version.split("@")
             self.packages[f"toolchain-{toolchain}"]["version"] = version
+            self.packages[f"toolchain-{toolchain}"]["optional"] = False
 
         # gather library dependencies
         pkg_versions = {}
