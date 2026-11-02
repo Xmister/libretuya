@@ -4,7 +4,6 @@ The upstream checkout is not a PlatformIO package. This only populates a
 versioned local build cache; no flash images are created or uploaded.
 """
 import json
-import os
 from pathlib import Path
 import shutil
 import subprocess
