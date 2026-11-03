@@ -11,7 +11,6 @@ void __libc_init_array(void);
 // Main app entrypoint
 int main(void);
 #if defined(LT_BL60X)
-int lt_bl602_application_main(void);
 void lt_bl602_early_init(void);
 #endif
 
@@ -40,7 +39,7 @@ int lt_main(void) {
 
 	// run the application
 #if defined(LT_BL60X)
-	return lt_bl602_application_main();
+	return 0;
 #else
 	return main();
 #endif
