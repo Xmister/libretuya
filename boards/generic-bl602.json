@@ -19,7 +19,7 @@
     "mfg": "0x13c000+0x032000",
     "reserve": "0x1f0000+0x006000",
     "psm": "0x1f6000+0x004000",
-    "data": "0x1fa000+0x002000",
+    "kvs": "0x1fa000+0x002000",
     "factory": "0x1fc000+0x004000"
   },
   "connectivity": [

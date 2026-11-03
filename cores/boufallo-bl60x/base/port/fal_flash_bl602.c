@@ -33,9 +33,9 @@ static int init(void) {
 	return 0;
 }
 
-static int data_range(long offset, size_t len) {
-	const unsigned long start = FLASH_DATA_OFFSET;
-	const unsigned long end	  = start + FLASH_DATA_LENGTH;
+static int kvs_range(long offset, size_t len) {
+	const unsigned long start = FLASH_KVS_OFFSET;
+	const unsigned long end	  = start + FLASH_KVS_LENGTH;
 	if (offset < 0)
 		return 0;
 	const unsigned long address = (unsigned long)offset;
@@ -55,7 +55,7 @@ static int read_flash(long offset, uint8_t *data, size_t len) {
 }
 
 static int write_flash(long offset, const uint8_t *data, size_t len) {
-	if (offset < 0 || len > INT_MAX || !data_range(offset, len))
+	if (offset < 0 || len > INT_MAX || !kvs_range(offset, len))
 		return -1;
 	if (!len)
 		return 0;
@@ -63,7 +63,7 @@ static int write_flash(long offset, const uint8_t *data, size_t len) {
 }
 
 static int erase_flash(long offset, size_t len) {
-	if (offset < 0 || len > INT_MAX || !data_range(offset, len))
+	if (offset < 0 || len > INT_MAX || !kvs_range(offset, len))
 		return -1;
 	if (!len)
 		return 0;
