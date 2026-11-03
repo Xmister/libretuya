@@ -31,7 +31,7 @@ int __wrap_romfs_register(void) {
 	return -1;
 }
 
-void lt_bl602_early_init(void) {
+void lt_init_family(void) {
 	/* The SDK's board main normally calls bl_sys_init(), which performs this
 	 * selection. LibreTiny supplies its own main and must do it explicitly. */
 	bl_sys_em_config();

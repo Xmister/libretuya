@@ -10,20 +10,12 @@ fal_partition_t fal_root_part = NULL;
 void __libc_init_array(void);
 // Main app entrypoint
 int main(void);
-#if defined(LT_BL60X)
-void lt_bl602_early_init(void);
-#endif
 
 int lt_main(void) {
 	// early initialize the family and variant
-#if defined(LT_BL60X)
-	lt_bl602_early_init();
+	lt_init_family();
 	if (lt_init_variant)
 		lt_init_variant();
-#else
-	lt_init_family();
-	lt_init_variant();
-#endif
 	// print a startup banner
 	LT_BANNER();
 	// initialize C library
