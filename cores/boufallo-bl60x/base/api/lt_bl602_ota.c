@@ -155,7 +155,6 @@ bool lt_ota_switch(bool revert) {
 	if (hal_boot2_get_active_entries(BOOT2_PARTITION_TYPE_FW, &fw_entry) != 0 ||
 		fw_entry.activeIndex != ota_original_slot)
 		return false;
-	fw_entry.activeIndex = ota_target_slot;
 	fw_entry.len = image_length;
 	if (hal_boot2_update_ptable(&fw_entry) != 0)
 		return false;
