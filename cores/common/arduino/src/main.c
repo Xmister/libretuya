@@ -2,11 +2,8 @@
 
 #include <Arduino.h>
 
-#if defined(LT_BL60X)
-int lt_bl602_application_main(void) {
-#else
+#if !defined(LT_BL60X)
 int main() {
-#endif
 	// initialize Arduino framework
 	lt_init_arduino();
 	// start the main task and OS kernel
@@ -16,6 +13,7 @@ int main() {
 	}
 	return 0;
 }
+#endif
 
 /**
  * @brief Main setup() and loop() task.
