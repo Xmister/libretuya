@@ -8,7 +8,8 @@
     "variant": "generic-bl602",
     "f_cpu": "160000000L",
     "prefix": "riscv64-unknown-elf-",
-    "ldscript": "flash_rom.ld"
+    "ldscript": "flash_rom.ld",
+    "boot_header": "bl60x_boot_header.bin"
   },
   "flash": {
     "boot": "0x000000+0x00e000",

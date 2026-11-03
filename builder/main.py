@@ -64,8 +64,6 @@ env.ConfigureEnvironment(platform, board)
 # - call env.AddLibrary("lib name", "base dir", [sources]) to add lib sources
 # - call env.BuildLibraries() to build lib targets with safe envs
 # - configure LINK, UF2OTA and UPLOAD_ACTIONS
-# - optionally provide UF2OTA_DEPENDS for generated UF2 inputs, or
-#   FIRMWARE_OUTPUT when no UF2 package is available
 # - script code ordering:
 #   - global vars
 #   - # Tools
@@ -92,11 +90,7 @@ if "nobuild" in COMMAND_LINE_TARGETS:
     env["UF2OTA"] = "dummy"  # forcefully allow uploading using ltchiptool
 else:
     target_elf = env.BuildProgram()
-    if "UF2OTA" in env:
-        target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
-        env.Depends(target_uf2, env.get("UF2OTA_DEPENDS", []))
-    else:
-        target_uf2 = env["FIRMWARE_OUTPUT"]
+    target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
     env.Depends(target_uf2, "checkprogsize")
 
 AlwaysBuild(env.Alias("nobuild", target_uf2))

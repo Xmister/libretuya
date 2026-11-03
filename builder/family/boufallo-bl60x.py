@@ -26,6 +26,8 @@ prefix = next(
 )
 if not prefix:
     raise RuntimeError("BL602 toolchain has no supported RISC-V GCC executable")
+env.BoardConfig().update("build.prefix", prefix)
+env.ExportBoardData(env.BoardConfig())
 env.Replace(
     AR=prefix + "gcc-ar",
     AS=prefix + "gcc",
@@ -69,9 +71,9 @@ env.Append(
     CPPDEFINES=defines,
     LIBPATH=[join(sdk, "system", "lib")],
 )
-# The stock MINIR3 partition table has no media partition. The SDK's prebuilt
-# startup otherwise tries to mount ROMFS there and loops forever when missing.
-if env.subst("$BOARD") == "sonoff-minir3":
+# The SDK tries to mount ROMFS at startup; skip it when the board has no
+# media partition.
+if not env.BoardConfig().get("flash.media", None):
     env.Append(LINKFLAGS=["-Wl,--wrap=romfs_register"])
 if os.environ.get("BL602_BLE_INIT_TRACE") == "1":
     env.Append(
@@ -132,29 +134,12 @@ env.Replace(
 )
 
 # Main firmware outputs and actions
-target_elf = join("${BUILD_DIR}", "${PROGNAME}.elf")
-is_minir3 = env.subst("$BOARD") == "sonoff-minir3"
-target_app = env.Command(
-    join("${BUILD_DIR}", "firmware.app.bin" if is_minir3 else "firmware.bin"),
-    target_elf,
-    "$OBJCOPY -O binary --gap-fill 0xff -S $SOURCE $TARGET",
+image_app = "${BUILD_DIR}/image_firmware_ota1.bin"
+image_slot = "${BUILD_DIR}/image_firmware_slot.bin"
+env.Replace(
+    LINK='${LTCHIPTOOL} link2bin ${BOARD_JSON} "" ""',
+    UF2OTA=[
+        f"{image_app},{image_app}+0x1000=flasher:app,ota",
+        f"{image_slot},{image_slot}=device:app,ota",
+    ],
 )
-if is_minir3:
-    # Device OTA consumes a complete slot; ltchiptool packages the raw app
-    # using the active device's boot header and partition table.
-    target_slot = env.Command(
-        join("${BUILD_DIR}", "firmware.slot.bin"),
-        target_app,
-        "$LTCHIPTOOL soc bl60x-slot-template --application $SOURCE --output $TARGET",
-    )
-    env.Replace(
-        UF2OTA=[
-            "${BUILD_DIR}/firmware.app.bin,${BUILD_DIR}/firmware.app.bin+0x1000="
-            "flasher:app,ota",
-            "${BUILD_DIR}/firmware.slot.bin,${BUILD_DIR}/firmware.slot.bin="
-            "device:app,ota",
-        ],
-        UF2OTA_DEPENDS=[target_app, target_slot],
-    )
-else:
-    env.Replace(FIRMWARE_OUTPUT=target_app)

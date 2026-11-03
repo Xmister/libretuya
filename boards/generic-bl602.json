@@ -1,5 +1,5 @@
 {
-  "name": "Generic BL602 (experimental, 2 MB reference layout)",
+  "name": "Generic BL602 (experimental)",
   "vendor": "Bouffalo Lab",
   "url": "https://www.bouffalolab.com/",
   "build": {
@@ -8,26 +8,26 @@
     "variant": "generic-bl602",
     "f_cpu": "160000000L",
     "prefix": "riscv64-unknown-elf-",
-    "ldscript": "flash_rom.ld"
+    "ldscript": "flash_rom.ld",
+    "boot_header": "bl60x_boot_header.bin"
   },
   "flash": {
     "boot": "0x000000+0x00e000",
     "part_table": "0x00e000+0x002000",
-    "app": "0x010000+0x0c8000",
-    "ota": "0x0d8000+0x088000",
-    "mfg": "0x160000+0x10000",
-    "media": "0x170000+0x79000",
-    "psm": "0x1e9000+0x8000",
-    "key": "0x1f1000+0x2000",
-    "data": "0x1f3000+0x5000",
-    "factory": "0x1f8000+0x8000"
+    "app": "0x010000+0x12c000",
+    "ota": "0x13c000+0x0b4000",
+    "mfg": "0x13c000+0x032000",
+    "reserve": "0x1f0000+0x006000",
+    "psm": "0x1f6000+0x004000",
+    "data": "0x1fa000+0x002000",
+    "factory": "0x1fc000+0x004000"
   },
   "connectivity": [
     "wifi",
     "ble"
   ],
   "upload": {
-    "maximum_size": 819200,
+    "maximum_size": 1224704,
     "maximum_ram_size": 276480,
     "flash_size": 2097152,
     "require_upload_port": true,

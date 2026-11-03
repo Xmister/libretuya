@@ -168,15 +168,11 @@ Checking for option value should be done with `#if` (not with `#ifdef`!) - if it
 ## Experimental BL602 platform
 
 The BL602 integration uses the pinned Bouffalo SDK selected by the family
-builder. Use `board = generic-bl602` for generic bring-up or
-`board = sonoff-minir3` for the verified MINIR3 flash layout. The current
-Arduino variant exposes GPIO0 through GPIO16. Board definitions do not prove
-that a pin is available on a particular module.
+builder. The `generic-bl602` profile currently describes the verified Sonoff
+MINIR3 flash layout. The Arduino variant exposes GPIO0 through GPIO16; board
+definitions do not prove that a pin is available on a particular module.
 
-ESPHome network OTA and UF2 output are currently available for the
-`sonoff-minir3` profile. Its `firmware.uf2` package can be uploaded through the
-LibreTiny Update/Web Server path or flashed over UART with a BL60X-capable
-ltchiptool build. UART flashing selects the inactive MINIR3 slot and preserves
-the bootloader and partition table. Generic BL602 builds still produce only an
-application binary; do not treat that file as a complete serial-flash image.
-BLE support provides scanning; GATT is unavailable.
+BL602 builds produce a UF2 package for LibreTiny OTA and for UART flashing with
+a BL60X-capable ltchiptool build. The live firmware partition table must match
+the layout in the board configuration. BLE support provides scanning; GATT is
+unavailable.
