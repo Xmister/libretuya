@@ -1,5 +1,4 @@
 # Experimental BL602 SDK family builder.
-# The main builder emits a raw application and a MINIR3 dual-slot UF2.
 import os
 import shlex
 import shutil
@@ -131,3 +130,31 @@ env.Append(LIBS=[x[2:] for x in sdk_libs])
 env.Replace(
     LINKCOM="${LINK} -o $TARGET $LINKFLAGS $__RPATH $SOURCES -Wl,--start-group $_LIBDIRFLAGS $_LIBFLAGS -Wl,--end-group"
 )
+
+# Main firmware outputs and actions
+target_elf = join("${BUILD_DIR}", "${PROGNAME}.elf")
+is_minir3 = env.subst("$BOARD") == "sonoff-minir3"
+target_app = env.Command(
+    join("${BUILD_DIR}", "firmware.app.bin" if is_minir3 else "firmware.bin"),
+    target_elf,
+    "$OBJCOPY -O binary --gap-fill 0xff -S $SOURCE $TARGET",
+)
+if is_minir3:
+    # Device OTA consumes a complete slot; ltchiptool packages the raw app
+    # using the active device's boot header and partition table.
+    target_slot = env.Command(
+        join("${BUILD_DIR}", "firmware.slot.bin"),
+        target_app,
+        "$LTCHIPTOOL soc bl60x-slot-template --application $SOURCE --output $TARGET",
+    )
+    env.Replace(
+        UF2OTA=[
+            "${BUILD_DIR}/firmware.app.bin,${BUILD_DIR}/firmware.app.bin+0x1000="
+            "flasher:app,ota",
+            "${BUILD_DIR}/firmware.slot.bin,${BUILD_DIR}/firmware.slot.bin="
+            "device:app,ota",
+        ],
+        UF2OTA_DEPENDS=[target_app, target_slot],
+    )
+else:
+    env.Replace(FIRMWARE_OUTPUT=target_app)

@@ -64,6 +64,8 @@ env.ConfigureEnvironment(platform, board)
 # - call env.AddLibrary("lib name", "base dir", [sources]) to add lib sources
 # - call env.BuildLibraries() to build lib targets with safe envs
 # - configure LINK, UF2OTA and UPLOAD_ACTIONS
+# - optionally provide UF2OTA_DEPENDS for generated UF2 inputs, or
+#   FIRMWARE_OUTPUT when no UF2 package is available
 # - script code ordering:
 #   - global vars
 #   - # Tools
@@ -90,45 +92,11 @@ if "nobuild" in COMMAND_LINE_TARGETS:
     env["UF2OTA"] = "dummy"  # forcefully allow uploading using ltchiptool
 else:
     target_elf = env.BuildProgram()
-    if env["FAMILY_OBJ"].short_name == "BL60X":
-        application_name = (
-            "firmware.app.bin"
-            if env.subst("$BOARD") == "sonoff-minir3"
-            else "firmware.bin"
-        )
-        target_app = env.Command(
-            join("${BUILD_DIR}", application_name),
-            target_elf,
-            "$OBJCOPY -O binary --gap-fill 0xff -S $SOURCE $TARGET",
-        )
-        if env.subst("$BOARD") == "sonoff-minir3":
-            # Keep the application-only binary as a separate recovery
-            # artifact. The normal firmware.bin and firmware.uf2 outputs are
-            # both UF2 packages, matching other LibreTiny families. The UF2
-            # has separate device and flasher images: runtime OTA writes a
-            # complete BFNP slot, while serial flashing packages the raw app
-            # from live partition state.
-            target_slot = env.Command(
-                join("${BUILD_DIR}", "firmware.slot.bin"),
-                target_app,
-                "$LTCHIPTOOL soc bl60x-slot-template "
-                "--application $SOURCE --output $TARGET",
-            )
-            env.Replace(
-                UF2OTA=[
-                    "${BUILD_DIR}/firmware.app.bin,${BUILD_DIR}/firmware.app.bin+0x1000="
-                    "flasher:app,ota",
-                    "${BUILD_DIR}/firmware.slot.bin,${BUILD_DIR}/firmware.slot.bin="
-                    "device:app,ota",
-                ],
-            )
-            target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
-            env.Depends(target_uf2, target_app)
-            env.Depends(target_uf2, target_slot)
-        else:
-            target_uf2 = target_app
-    else:
+    if "UF2OTA" in env:
         target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
+        env.Depends(target_uf2, env.get("UF2OTA_DEPENDS", []))
+    else:
+        target_uf2 = env["FIRMWARE_OUTPUT"]
     env.Depends(target_uf2, "checkprogsize")
 
 AlwaysBuild(env.Alias("nobuild", target_uf2))
