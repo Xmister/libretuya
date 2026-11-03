@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 
-#if !defined(LT_BL60X)
 int main() {
 	// initialize Arduino framework
 	lt_init_arduino();
@@ -13,7 +12,6 @@ int main() {
 	}
 	return 0;
 }
-#endif
 
 /**
  * @brief Main setup() and loop() task.

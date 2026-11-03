@@ -10,15 +10,10 @@ static void bl602_main_task(void *argument) {
 	vTaskDelete(nullptr);
 }
 
-void lt_init_arduino(void) {}
+extern "C" int lt_main(void);
 
-extern "C" int lt_bl602_application_main(void) {
-	lt_init_arduino();
-	if (!startMainTask()) {
-		LT_F("Couldn't start the main task");
-		return 1;
-	}
-	return 0;
+void lt_init_arduino(void) {
+	lt_main();
 }
 
 extern "C" bool startMainTask(void) {
