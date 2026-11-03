@@ -1,5 +1,6 @@
 /* The BL602 SDK calls main() from an already running FreeRTOS task. */
 #include <ArduinoPrivate.h>
+#include <lt_init.h>
 extern "C" {
 #include <FreeRTOS.h>
 #include <task.h>
@@ -9,6 +10,8 @@ static void bl602_main_task(void *argument) {
 	mainTask(argument);
 	vTaskDelete(nullptr);
 }
+
+void lt_init_arduino(void) {}
 
 extern "C" bool startMainTask(void) {
 	/* xTaskCreate stack depth is in StackType_t units, not bytes. */

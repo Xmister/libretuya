@@ -8,12 +8,7 @@ int lt_bl602_application_main(void) {
 int main() {
 #endif
 	// initialize Arduino framework
-#if defined(LT_BL60X)
-	if (lt_init_arduino)
-		lt_init_arduino();
-#else
 	lt_init_arduino();
-#endif
 	// start the main task and OS kernel
 	if (!startMainTask()) {
 		LT_F("Couldn't start the main task");
