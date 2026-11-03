@@ -70,7 +70,9 @@ void MbedTLSClient::init() {
 		_clientKey	= (mbedtls_pk_context *)malloc(sizeof(mbedtls_pk_context));
 	}
 	// Realtek AmbZ: init platform here to ensure HW crypto is initialized in ssl_init
+#if defined(MBEDTLS_PLATFORM_MEMORY) && !defined(MBEDTLS_PLATFORM_CALLOC_MACRO) && !defined(MBEDTLS_PLATFORM_FREE_MACRO)
 	mbedtls_platform_set_calloc_free(calloc, free);
+#endif
 	mbedtls_ssl_init(_sslCtx);
 	mbedtls_ssl_config_init(_sslCfg);
 }

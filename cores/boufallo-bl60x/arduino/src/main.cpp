@@ -1,5 +1,4 @@
 #include <ArduinoPrivate.h>
-#include <lt_init.h>
 extern "C" {
 #include <FreeRTOS.h>
 #include <task.h>

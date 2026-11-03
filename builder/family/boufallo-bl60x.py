@@ -66,7 +66,12 @@ env.Append(CXXFLAGS=["-fno-threadsafe-statics"])
 env.Append(
     CCFLAGS=arch,
     ASFLAGS=arch,
-    LINKFLAGS=arch + ["-nostartfiles", "-Wl,--wrap=vPortDefineHeapRegions"],
+    LINKFLAGS=arch + [
+        "-nostartfiles",
+        "-Wl,--wrap=vPortDefineHeapRegions",
+        # LTO may introduce putchar calls after archive symbol selection.
+        "-Wl,--undefined=__wrap_putchar",
+    ],
     CPPPATH=includes,
     CPPDEFINES=defines,
     LIBPATH=[join(sdk, "system", "lib")],

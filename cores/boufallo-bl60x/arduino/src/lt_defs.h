@@ -4,4 +4,4 @@
 #define LT_ARD_HAS_WIFI	   1
 #define LT_ARD_HAS_WIRE	   0
 #define LT_ARD_HAS_SPI	   0
-#define LT_ARD_MD5_MBEDTLS 1
+#define LT_ARD_MD5_HOSTAPD 1

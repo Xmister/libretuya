@@ -1,10 +1,9 @@
 #include <libretiny.h>
-#include <lt_ota.h>
 #include <sdk_private.h>
 
 #include <bl_flash.h>
 #include <hal_boot2.h>
-#include <sodium/crypto_hash_sha256.h>
+#include <mbedtls/sha256.h>
 
 #define BL602_FW_HEADER_SIZE 0x1000
 #define BL602_BOOT_HEADER_SIZE 176
@@ -59,22 +58,29 @@ static bool validate_slot(uint32_t offset, uint32_t capacity,
 	if (!app_length || app_length > capacity - BL602_FW_HEADER_SIZE)
 		return false;
 
-	crypto_hash_sha256_state sha;
-	if (crypto_hash_sha256_init(&sha) != 0)
+	mbedtls_sha256_context sha;
+	mbedtls_sha256_init(&sha);
+	if (mbedtls_sha256_starts_ret(&sha, 0) != 0) {
+		mbedtls_sha256_free(&sha);
 		return false;
+	}
 	uint8_t data[1024];
 	uint32_t remaining = app_length;
 	uint32_t address = offset + BL602_FW_HEADER_SIZE;
 	while (remaining) {
 		const uint32_t chunk = remaining > sizeof(data) ? sizeof(data) : remaining;
 		if (bl_flash_read(address, data, (int)chunk) != 0 ||
-			crypto_hash_sha256_update(&sha, data, chunk) != 0)
+			mbedtls_sha256_update_ret(&sha, data, chunk) != 0) {
+			mbedtls_sha256_free(&sha);
 			return false;
+		}
 		address += chunk;
 		remaining -= chunk;
 	}
-	uint8_t digest[crypto_hash_sha256_BYTES];
-	if (crypto_hash_sha256_final(&sha, digest) != 0 ||
+	uint8_t digest[32];
+	const int sha_result = mbedtls_sha256_finish_ret(&sha, digest);
+	mbedtls_sha256_free(&sha);
+	if (sha_result != 0 ||
 		memcmp(digest, header + 132, sizeof(digest)) != 0)
 		return false;
 	*image_length = BL602_FW_HEADER_SIZE + app_length;
@@ -106,15 +112,6 @@ bool lt_ota_is_valid(uint8_t index) {
 	(void)active;
 	return validate_slot(index == 1 ? address0 : address1,
 						 index == 1 ? size0 : size1, &image_length);
-}
-
-uf2_ota_scheme_t lt_ota_get_uf2_scheme(void) {
-	const uint8_t current = lt_ota_dual_get_current();
-	if (current == 1)
-		return UF2_SCHEME_DEVICE_DUAL_2;
-	if (current == 2)
-		return UF2_SCHEME_DEVICE_DUAL_1;
-	return UF2_SCHEME_DEVICE_DUAL_1;
 }
 
 void lt_ota_set_write_protect(uf2_ota_t *uf2) {
