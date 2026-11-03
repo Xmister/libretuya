@@ -1,4 +1,3 @@
-/* The BL602 SDK calls main() from an already running FreeRTOS task. */
 #include <ArduinoPrivate.h>
 #include <lt_init.h>
 extern "C" {
