@@ -14,8 +14,7 @@ int main(void);
 int lt_main(void) {
 	// early initialize the family and variant
 	lt_init_family();
-	if (lt_init_variant)
-		lt_init_variant();
+	lt_init_variant();
 	// print a startup banner
 	LT_BANNER();
 	// initialize C library

@@ -38,3 +38,5 @@ void lt_init_family(void) {
 	/* Reference board UART0 TX=GPIO16, RX=GPIO7. */
 	bl_uart_init(0, 16, 7, 255, 255, 115200);
 }
+
+__attribute__((weak)) void lt_init_variant(void) {}
