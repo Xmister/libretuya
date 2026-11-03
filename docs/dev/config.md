@@ -173,6 +173,10 @@ builder. Use `board = generic-bl602` for generic bring-up or
 Arduino variant exposes GPIO0 through GPIO16. Board definitions do not prove
 that a pin is available on a particular module.
 
-ESPHome network OTA is available only for the `sonoff-minir3` profile and uses
-its device-specific image wrapper. Generic serial/UF2 upload is not implemented
-for this family. BLE support provides scanning; GATT is unavailable.
+ESPHome network OTA and UF2 output are currently available for the
+`sonoff-minir3` profile. Its `firmware.uf2` package can be uploaded through the
+LibreTiny Update/Web Server path or flashed over UART with a BL60X-capable
+ltchiptool build. UART flashing selects the inactive MINIR3 slot and preserves
+the bootloader and partition table. Generic BL602 builds still produce only an
+application binary; do not treat that file as a complete serial-flash image.
+BLE support provides scanning; GATT is unavailable.
