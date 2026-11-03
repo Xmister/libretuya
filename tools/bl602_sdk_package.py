@@ -4,6 +4,7 @@ The upstream checkout is not a PlatformIO package. This only populates a
 versioned local build cache; no flash images are created or uploaded.
 """
 
+import errno
 import json
 import shutil
 import subprocess
@@ -12,6 +13,18 @@ from pathlib import Path
 
 SDK_REVISION = "2f1db433bc832b7aa8cc3d427527d48e66bcce29"
 SDK_REPOSITORY = "https://github.com/Ishu1519/BL602-Arduino-Core.git"
+
+
+def _is_valid_package(package):
+    marker = package / ".sdk-revision"
+    return (
+        marker.is_file()
+        and marker.read_text(encoding="utf-8").strip() == SDK_REVISION
+        and (package / "package.json").is_file()
+        and (package / "platform.txt").is_file()
+        and (package / "system/lib").is_dir()
+        and (package / "system/ld").is_dir()
+    )
 
 
 def _run(args, cwd=None):
@@ -30,14 +43,7 @@ def prepare(core_dir, checkout=None):
     package = cache / SDK_REVISION
     marker = package / ".sdk-revision"
     if package.exists():
-        if (
-            marker.is_file()
-            and marker.read_text(encoding="utf-8").strip() == SDK_REVISION
-            and (package / "package.json").is_file()
-            and (package / "platform.txt").is_file()
-            and (package / "system/lib").is_dir()
-            and (package / "system/ld").is_dir()
-        ):
+        if _is_valid_package(package):
             return package
         raise RuntimeError(f"Invalid existing BL602 SDK cache at {package}")
     cache.mkdir(parents=True, exist_ok=True)
@@ -93,10 +99,11 @@ def prepare(core_dir, checkout=None):
         (staged / ".sdk-revision").write_text(SDK_REVISION + "\n", encoding="utf-8")
         try:
             staged.rename(package)
-        except FileExistsError:
-            if (
-                not marker.is_file()
-                or marker.read_text(encoding="utf-8").strip() != SDK_REVISION
-            ):
+        except OSError as err:
+            # POSIX reports ENOTEMPTY when another builder publishes a
+            # non-empty directory at the same time; Windows may use EEXIST.
+            if err.errno not in (errno.EEXIST, errno.ENOTEMPTY):
+                raise
+            if not _is_valid_package(package):
                 raise RuntimeError(f"Invalid existing BL602 SDK cache at {package}")
     return package
