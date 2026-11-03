@@ -91,13 +91,38 @@ if "nobuild" in COMMAND_LINE_TARGETS:
 else:
     target_elf = env.BuildProgram()
     if env["FAMILY_OBJ"].short_name == "BL60X":
-        # BL602 emits a raw application image without bootinfo. ESPHome adds
-        # the verified board boot header and OTA wrapper in its platform hook.
-        target_uf2 = env.Command(
+        target_app = env.Command(
             join("${BUILD_DIR}", "firmware.bin"),
             target_elf,
             "$OBJCOPY -O binary --gap-fill 0xff -S $SOURCE $TARGET",
         )
+        if env.subst("$BOARD") == "sonoff-minir3":
+            # Keep firmware.bin for recovery tools. The UF2 has separate
+            # device and flasher images: runtime OTA writes a complete BFNP
+            # slot through LibreTiny's Update/UF2 path, while serial flashing
+            # accepts the raw app and lets ltchiptool package it from live
+            # partition state.
+            target_slot = env.Command(
+                join("${BUILD_DIR}", "firmware.slot.bin"),
+                target_app,
+                "$LTCHIPTOOL soc bl60x-slot-template "
+                "--application $SOURCE --output $TARGET",
+            )
+            env.Replace(
+                UF2OTA=[
+                    "${BUILD_DIR}/firmware.bin,${BUILD_DIR}/firmware.bin+0x1000="
+                    "flasher:app,ota",
+                    "${BUILD_DIR}/firmware.slot.bin,${BUILD_DIR}/firmware.slot.bin="
+                    "device:app,ota",
+                ],
+                # Preserve firmware.bin for ESPHome's raw recovery download.
+                UF2OTA_OUTPUTS=[join("${BUILD_DIR}", "firmware.uf2")],
+            )
+            target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
+            env.Depends(target_uf2, target_app)
+            env.Depends(target_uf2, target_slot)
+        else:
+            target_uf2 = target_app
     else:
         target_uf2 = env.BuildUF2OTA(target_uf2, target_elf)
     env.Depends(target_uf2, "checkprogsize")

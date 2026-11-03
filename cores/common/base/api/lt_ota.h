@@ -56,6 +56,9 @@ bool lt_ota_end(lt_ota_ctx_t *ctx);
  */
 void lt_ota_set_write_protect(uf2_ota_t *uf2);
 
+/** Clear family-specific flash write permissions after an OTA ends or aborts. */
+void lt_ota_clear_write_protect(void);
+
 /**
  * @brief Process a chunk of data.
  *

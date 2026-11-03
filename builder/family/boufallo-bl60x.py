@@ -1,5 +1,5 @@
 # Experimental BL602 SDK family builder.
-# The main builder emits a raw application; ESPHome packages MINIR3 OTA images.
+# The main builder emits a raw application and a MINIR3 dual-slot UF2.
 import os
 import shlex
 import shutil
@@ -123,7 +123,8 @@ queue.AddLibrary(name="bl602_startup", base_dir=startup_dir, srcs=["+<start.S>"]
 queue.BuildLibraries()
 
 # Match the SDK's archive list. The linker command groups all archives to
-# resolve circular references; ltchiptool UF2/serial packaging is not enabled.
+# resolve circular references. The generic UF2 package is produced by the main
+# builder from the linked application and verified board partition map.
 sdk_libs = shlex.split(props["compiler.c.elf.libs"])
 sdk_libs = [x for x in sdk_libs if x.startswith("-l")]
 env.Append(LIBS=[x[2:] for x in sdk_libs])

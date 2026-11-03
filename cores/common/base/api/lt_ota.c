@@ -29,23 +29,30 @@ void lt_ota_begin(lt_ota_ctx_t *ctx, size_t size) {
 }
 
 bool lt_ota_end(lt_ota_ctx_t *ctx) {
-	if (!ctx || !ctx->running)
+	if (!ctx || !ctx->running) {
+		lt_ota_clear_write_protect();
 		return true;
+	}
 
 	uf2_ctx_free(&ctx->uf2);
 	uf2_info_free(&ctx->info);
 	ctx->running = false;
 
+	bool result = true;
 	if (ctx->bytes_written && ctx->bytes_written == ctx->bytes_total) {
 		// try to activate the 2nd image
-		return lt_ota_switch(/* revert= */ false);
+		result = lt_ota_switch(/* revert= */ false);
 	}
 
-	// activation not attempted (update aborted)
-	return true;
+	// activation not attempted (update aborted); in either case, drop any
+	// family-specific write window before returning to the application.
+	lt_ota_clear_write_protect();
+	return result;
 }
 
 __attribute__((weak)) void lt_ota_set_write_protect(uf2_ota_t *uf2) {}
+
+__attribute__((weak)) void lt_ota_clear_write_protect(void) {}
 
 size_t lt_ota_write(lt_ota_ctx_t *ctx, const uint8_t *data, size_t len) {
 	if (!ctx || !ctx->running)

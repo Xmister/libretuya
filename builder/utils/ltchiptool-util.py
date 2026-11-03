@@ -35,7 +35,7 @@ def env_uf2ota(env: Environment, *args, **kwargs):
     if platform.custom("fw_output"):
         output = platform.custom("fw_output")
 
-    outputs = [
+    outputs = env.get("UF2OTA_OUTPUTS") or [
         join("${BUILD_DIR}", output),
         join("${BUILD_DIR}", "firmware.uf2"),
         join("${BUILD_DIR}", "firmware.bin"),
