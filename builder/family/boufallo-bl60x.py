@@ -380,6 +380,11 @@ env.Replace(
     LINK='${LTCHIPTOOL} link2bin ${BOARD_JSON} "" ""',
     UF2OTA=[
         f"{image_app},{image_app}+0x1000=flasher:app,ota",
-        f"{image_staged},{image_staged}=device:app,ota",
+        # The running BL602 OTA backend selects the opposite slot's UF2
+        # scheme. When slot 0 is active, stage into slot 1 and let the helper
+        # expand back into slot 0. When slot 1 is active, write the complete
+        # firmware directly to the larger, inactive slot 0.
+        f"{image_slot}=device1:app",
+        f"{image_staged}=device2:ota",
     ],
 )
