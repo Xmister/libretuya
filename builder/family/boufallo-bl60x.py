@@ -251,6 +251,13 @@ shutil.copyfile(join(sdk, "system", "ld", "flash_rom.ld"), ld_path)
 env.Replace(LDSCRIPT_PATH=[ld_path])
 
 queue = env.AddLibraryQueue("bouffalo-bl602")
+# The SDK enables lwIP mDNS but omits the responder implementation from its
+# prebuilt archive. Compile the matching upstream source against the SDK ABI.
+queue.AddLibrary(
+    name="bl602_lwip_mdns",
+    base_dir=sdk,
+    srcs=["+<system/upstream/lwip/src/apps/mdns/mdns.c>"],
+)
 # The SDK's software atomic implementation is included from this core's api/
 # sources. Keep the A extension disabled so GCC cannot emit AMO instructions
 # into ordinary SRAM accesses.

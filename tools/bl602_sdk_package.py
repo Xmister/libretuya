@@ -5,21 +5,57 @@ versioned local build cache; no flash images are created or uploaded.
 """
 
 import errno
+import hashlib
 import json
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from urllib.request import Request, urlopen
 
 SDK_REVISION = "2f1db433bc832b7aa8cc3d427527d48e66bcce29"
 SDK_REPOSITORY = "https://github.com/Ishu1519/BL602-Arduino-Core.git"
+LWIP_MDNS_REVISION = "159e31b689577dbf69cf0683bbaffbd71fa5ee10"
+LWIP_MDNS_SHA256 = "31ae5b30abd30ad70e1cfcae121d76756e45f12559f6ecf14f9f6cab55f7d426"
+LWIP_MDNS_URL = (
+    "https://raw.githubusercontent.com/lwip-tcpip/lwip/"
+    f"{LWIP_MDNS_REVISION}/src/apps/mdns/mdns.c"
+)
+LWIP_MDNS_PATH = Path("system/upstream/lwip/src/apps/mdns/mdns.c")
+PACKAGE_REVISION = LWIP_MDNS_REVISION[:12]
+
+
+def _sha256(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(64 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _download_lwip_mdns():
+    request = Request(LWIP_MDNS_URL, headers={"User-Agent": "LibreTiny-BL602"})
+    with urlopen(request, timeout=60) as response:
+        source = response.read()
+    actual = hashlib.sha256(source).hexdigest()
+    if actual != LWIP_MDNS_SHA256:
+        raise RuntimeError(
+            f"Upstream lwIP mDNS source is {actual}, expected {LWIP_MDNS_SHA256}"
+        )
+    return source
 
 
 def _is_valid_package(package):
     marker = package / ".sdk-revision"
+    lwip_marker = package / ".lwip-mdns-revision"
+    lwip_source = package / LWIP_MDNS_PATH
     return (
         marker.is_file()
         and marker.read_text(encoding="utf-8").strip() == SDK_REVISION
+        and lwip_marker.is_file()
+        and lwip_marker.read_text(encoding="utf-8").strip() == LWIP_MDNS_REVISION
+        and lwip_source.is_file()
+        and _sha256(lwip_source) == LWIP_MDNS_SHA256
         and (package / "package.json").is_file()
         and (package / "platform.txt").is_file()
         and (package / "system/lib").is_dir()
@@ -40,7 +76,7 @@ def _run(args, cwd=None):
 
 def prepare(core_dir, checkout=None):
     cache = Path(core_dir) / "bl602-sdk-cache"
-    package = cache / SDK_REVISION
+    package = cache / f"{SDK_REVISION}-lwip-{PACKAGE_REVISION}"
     marker = package / ".sdk-revision"
     if package.exists():
         if _is_valid_package(package):
@@ -85,6 +121,9 @@ def prepare(core_dir, checkout=None):
         for name in ("platform.txt", "LICENSE", "THIRD_PARTY_NOTICES.md"):
             shutil.copy2(source / name, staged / name)
         shutil.copytree(source / "system", staged / "system")
+        lwip_source = staged / LWIP_MDNS_PATH
+        lwip_source.parent.mkdir(parents=True)
+        lwip_source.write_bytes(_download_lwip_mdns())
         (staged / "package.json").write_text(
             json.dumps(
                 {
@@ -97,6 +136,9 @@ def prepare(core_dir, checkout=None):
             encoding="utf-8",
         )
         (staged / ".sdk-revision").write_text(SDK_REVISION + "\n", encoding="utf-8")
+        (staged / ".lwip-mdns-revision").write_text(
+            LWIP_MDNS_REVISION + "\n", encoding="utf-8"
+        )
         try:
             staged.rename(package)
         except OSError as err:
