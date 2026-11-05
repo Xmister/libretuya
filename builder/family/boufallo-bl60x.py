@@ -384,7 +384,7 @@ env.Replace(
         # scheme. When slot 0 is active, stage into slot 1 and let the helper
         # expand back into slot 0. When slot 1 is active, write the complete
         # firmware directly to the larger, inactive slot 0.
-        f"{image_slot}=device1:app",
-        f"{image_staged}=device2:ota",
+        f"{image_slot},{image_slot}=device:app,",
+        f"{image_staged},{image_staged}=device:,ota",
     ],
 )
