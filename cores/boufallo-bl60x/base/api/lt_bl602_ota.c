@@ -122,10 +122,22 @@ void lt_ota_set_write_protect(uf2_ota_t *uf2) {
 		lt_bl602_ota_clear_write_window();
 		return;
 	}
-	ota_original_slot = active;
 	ota_target_slot = 1 - active;
+	const uint32_t target_capacity = ota_target_slot == 0 ? size0 : size1;
+	const uint32_t active_capacity = active == 0 ? size0 : size1;
+	/* The staged updater and compressed payload must fit in the smaller slot.
+	 * It then expands the full image into the larger app slot. If the running
+	 * firmware is already in the smaller slot, the only inactive target is the
+	 * larger slot; writing the helper there would reverse the intended flow.
+	 * Refuse that update instead of producing a capsule that cannot safely
+	 * expand to the app slot. */
+	if (target_capacity >= active_capacity) {
+		lt_bl602_ota_clear_write_window();
+		return;
+	}
+	ota_original_slot = active;
 	ota_target_offset = ota_target_slot == 0 ? address0 : address1;
-	ota_target_capacity = ota_target_slot == 0 ? size0 : size1;
+	ota_target_capacity = target_capacity;
 	ota_update_pending = true;
 	lt_bl602_ota_write_window(ota_target_offset, ota_target_capacity,
 						  ota_target_slot == 1);
