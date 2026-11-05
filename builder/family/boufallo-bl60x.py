@@ -390,6 +390,6 @@ env.Replace(
         # OTA always stages through the smaller slot 1. The running application
         # refuses updates while slot 1 is active because that slot cannot hold
         # the complete application image.
-        f"{image_staged}=device2:ota",
+        f"{image_staged},{image_staged}=device:,ota",
     ],
 )
