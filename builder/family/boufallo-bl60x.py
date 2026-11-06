@@ -153,17 +153,23 @@ def build_staged_image(target, source, env):
     return 0
 platform = env.PioPlatform()
 sdk = platform.get_package_dir("framework-bouffalo-bl602")
-toolchain = platform.get_package_dir("toolchain-riscv")
+toolchain = platform.get_package_dir("toolchain-riscv32-esp")
 if not sdk or not toolchain:
     raise RuntimeError("BL602 requires the SDK and RISC-V toolchain packages")
 env.PrependENVPath("PATH", join(toolchain, "bin"))
-# PlatformIO's registry GCC uses riscv-none-elf; the BL602 reference SDK's
-# GCC 10 uses riscv64-unknown-elf. Both target rv32 with the flags below.
+# Espressif's registry GCC uses riscv32-esp-elf. PlatformIO's generic RISC-V
+# package has no Linux ARM64 build, so it cannot drive the BL60X target on
+# arm64 build hosts. The BL602 reference SDK's GCC 10 uses
+# riscv64-unknown-elf. All three target rv32 with the flags below.
 tool_bin = join(toolchain, "bin")
 prefix = next(
     (
         name
-        for name in ("riscv-none-elf-", "riscv64-unknown-elf-")
+        for name in (
+            "riscv32-esp-elf-",
+            "riscv-none-elf-",
+            "riscv64-unknown-elf-",
+        )
         if os.path.isfile(join(tool_bin, name + "gcc"))
     ),
     None,
