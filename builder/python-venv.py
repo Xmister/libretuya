@@ -140,8 +140,6 @@ def env_install_python_dependencies(env: Environment, dependencies: dict):
         return
 
     try:
-        for name, _marker, _digest in direct_installs:
-            env.RunCommand(*pip_cmd("uninstall", "-y", name))
         env.RunCommand(
             *pip_cmd("install", "-U", *to_install),
             message="LibreTiny: Installing Python dependencies",
