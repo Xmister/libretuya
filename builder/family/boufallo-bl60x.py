@@ -387,9 +387,9 @@ env.Replace(
     LINK='${LTCHIPTOOL} link2bin ${BOARD_JSON} "" ""',
     UF2OTA=[
         f"{image_app},{image_app}+0x1000=flasher:app,ota",
-        # OTA always stages through the smaller slot 1. The running application
-        # refuses updates while slot 1 is active because that slot cannot hold
-        # the complete application image.
+        # Slot 0 updates stage through slot 1. Slot 1 updates write the full
+        # application directly into the larger, inactive slot 0.
+        f"{image_slot},{image_slot}=device:app,",
         f"{image_staged},{image_staged}=device:,ota",
     ],
 )

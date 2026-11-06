@@ -122,19 +122,17 @@ void lt_ota_set_write_protect(uf2_ota_t *uf2) {
 		lt_bl602_ota_clear_write_window();
 		return;
 	}
-	/* Slot 1 only holds the staged updater and compressed application. Refuse
-	 * OTA while slot 1 is active because the larger application cannot be
-	 * written in place and no smaller inactive staging slot is available. */
-	if (active != 0) {
-		lt_bl602_ota_clear_write_window();
-		return;
-	}
-	ota_target_slot = 1;
+	ota_target_slot = 1 - active;
+	const uint32_t target_capacity =
+		ota_target_slot == 0 ? size0 : size1;
+	/* Slot 0 updates stage through slot 1. Slot 1 updates use the complete
+	 * application in the larger, inactive slot 0. */
 	ota_original_slot = active;
-	ota_target_offset = address1;
-	ota_target_capacity = size1;
+	ota_target_offset = ota_target_slot == 0 ? address0 : address1;
+	ota_target_capacity = target_capacity;
 	ota_update_pending = true;
-	lt_bl602_ota_write_window(ota_target_offset, ota_target_capacity, 1);
+	lt_bl602_ota_write_window(ota_target_offset, ota_target_capacity,
+						  ota_target_slot == 1);
 }
 
 void lt_ota_clear_write_protect(void) {
