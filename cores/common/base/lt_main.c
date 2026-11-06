@@ -18,7 +18,9 @@ int lt_main(void) {
 	// print a startup banner
 	LT_BANNER();
 	// initialize C library
+#if !defined(LT_BL60X)
 	__libc_init_array();
+#endif
 	// inform about the reset reason
 	LT_I("Reset reason: %s", lt_get_reboot_reason_name(0));
 	// initialize FAL
@@ -27,5 +29,9 @@ int lt_main(void) {
 	fal_root_part = (fal_partition_t)fal_partition_find("root");
 
 	// run the application
+#if defined(LT_BL60X)
+	return 0;
+#else
 	return main();
+#endif
 }

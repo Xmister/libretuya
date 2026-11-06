@@ -5,6 +5,7 @@ import shutil
 import site
 import subprocess
 import sys
+from hashlib import sha256
 from pathlib import Path
 
 import semantic_version
@@ -118,8 +119,16 @@ def env_install_python_dependencies(env: Environment, dependencies: dict):
         packages = {}
 
     to_install = []
+    direct_installs = []
     for name, spec in dependencies.items():
         install_spec = f"{name}{dependencies[name]}"
+        if spec.startswith(" @ "):
+            marker = env["LTPYTHONENV"] / f".lt-direct-{name}.sha256"
+            digest = sha256(install_spec.encode()).hexdigest()
+            if not marker.is_file() or marker.read_text().strip() != digest:
+                to_install.append(install_spec)
+                direct_installs.append((name, marker, digest))
+            continue
         if name not in packages:
             to_install.append(install_spec)
         elif spec:
@@ -135,6 +144,8 @@ def env_install_python_dependencies(env: Environment, dependencies: dict):
             *pip_cmd("install", "-U", *to_install),
             message="LibreTiny: Installing Python dependencies",
         )
+        for _name, marker, digest in direct_installs:
+            marker.write_text(f"{digest}\n")
     except Exception as e:
         env.PrintCommandError(
             e,

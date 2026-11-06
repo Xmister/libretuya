@@ -101,7 +101,8 @@
 		"code": "bl60x",
 		"description": "Boufallo BL602/BL604",
 		"id": "0xDE1270B7",
-		"short_name": "BL60X"
+		"short_name": "BL60X",
+		"package": "framework-bouffalo-bl602"
 	},
 	"winnermicro-iot": {
 		"parent": null,

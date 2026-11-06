@@ -85,6 +85,7 @@ To see debug messages from i.e. OTA, loglevel must also be changed.
 - `LT_DEBUG_OTA` (1) - OTA updates (`Update` library)
 - `LT_DEBUG_FDB` (0) - FlashDB debugging (macros within the library)
 - `LT_DEBUG_MDNS` (0) - mDNS client library
+- `LT_DEBUG_BLE` (`LT_DEBUG_ALL`) - BL602 Bluetooth Low Energy controller and scan diagnostics
 - `LT_DEBUG_LWIP` (0) - enables `LWIP_DEBUG`, provides `LWIP_PLATFORM_DIAG`; per-module options (i.e. `TCP_DEBUG`) are off by default and need to be enabled separately - see example in `Project options` above
 - `LT_DEBUG_LWIP_ASSERT` (0) - enables assertions within lwIP (doesn't need `LT_DEBUG_LWIP`)
 
@@ -163,3 +164,15 @@ Checking for option value should be done with `#if` (not with `#ifdef`!) - if it
 	- `LT_HEAP_FUNC` - function name used to get available heap size (for `LT_HEAP_I()`)
 	- `LT_REALLOC_FUNC` - function name used for `realloc()` call
 	- `LT_REMALLOC` - use `malloc()` and `memcpy()` in `realloc()` call
+
+## Experimental BL602 platform
+
+The BL602 integration uses the pinned Bouffalo SDK selected by the family
+builder. The `generic-bl602` profile currently describes the verified Sonoff
+MINIR3 flash layout. The Arduino variant exposes GPIO0 through GPIO16; board
+definitions do not prove that a pin is available on a particular module.
+
+BL602 builds produce a UF2 package for LibreTiny OTA and for UART flashing with
+a BL60X-capable ltchiptool build. The live firmware partition table must match
+the layout in the board configuration. BLE support provides scanning; GATT is
+unavailable.
