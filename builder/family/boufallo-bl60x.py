@@ -191,6 +191,10 @@ env.Replace(
     RANLIB=prefix + "gcc-ranlib",
     SIZETOOL=prefix + "size",
 )
+if prefix == "riscv32-esp-elf-":
+    # Espressif's newlib renamed the global reentrancy pointer. The SDK's
+    # prebuilt libnewlibc still references the legacy symbol.
+    env.Append(LINKFLAGS=["-Wl,--defsym=_impure_ptr=_global_impure_ptr"])
 env.ConfigureFamily()
 
 # The reference package carries the vendor headers and prebuilt libraries.
