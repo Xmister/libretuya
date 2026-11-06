@@ -21,7 +21,7 @@ board: PlatformBoardConfig = env.BoardConfig()
 env.SConscript("utils/command.py", exports="env")
 
 python_deps = {
-    "ltchiptool": ">=4.14.3,<5.0",
+    "ltchiptool": " @ git+https://github.com/Xmister/ltchiptool.git@0ac3dcf951023fe0eb70e31fa6ff90ea3a5b2743",
 }
 env.SConscript("python-venv.py", exports="env")
 env.ConfigurePythonVenv()
