@@ -1,6 +1,7 @@
 #include <FreeRTOS.h>
 #include <bl_uart.h>
 #include <libretiny.h>
+#include <reent.h>
 #include <task.h>
 
 extern uint8_t _heap_start, _heap_size, _heap_wifi_start, _heap_wifi_size;
@@ -16,6 +17,23 @@ void __wrap_vPortDefineHeapRegions(const HeapRegion_t *regions) {
 	}
 }
 
+/*
+ * The riscv32-esp-elf newlib keeps its global reentrancy struct behind _global_impure_ptr, which ESP-IDF's startup
+ * sets; nothing does on BL602, so it stays NULL (and _impure_ptr is aliased to it by the builder). Anything that uses
+ * _GLOBAL_REENT then writes through NULL: e.g. atexit()/__register_exitproc() when the first function-local static with
+ * a destructor is constructed (ESPAsyncWebServer DefaultHeaders::Instance() in ESPHome's web_server_base), which froze
+ * or reset the chip. Point it at a static struct before any constructor runs.
+ */
+extern struct _reent *_global_impure_ptr;
+static struct _reent lt_bl602_global_reent;
+
+static void lt_bl602_init_reent(void) {
+	if (_global_impure_ptr == NULL) {
+		_REENT_INIT_PTR(&lt_bl602_global_reent);
+		_global_impure_ptr = &lt_bl602_global_reent;
+	}
+}
+
 void lt_bl602_prepare_heap(void) {
 	const HeapRegion_t regions[] = {
 		{&_heap_start,		(size_t)&_heap_size		},
@@ -23,6 +41,7 @@ void lt_bl602_prepare_heap(void) {
 		{NULL,				0						},
 	};
 	__wrap_vPortDefineHeapRegions(regions);
+	lt_bl602_init_reent();
 }
 
 /* No ROMFS exists on the stock MINIR3. Return failure to the SDK startup,

@@ -29,6 +29,8 @@ void pinMode(pin_size_t pinNumber, PinMode mode) {
 	if (result)
 		return;
 	data->gpioMode = mode;
+	// the pad is a GPIO now: a later analogWrite() has to mux it back to PWM
+	pinDisable(pin, PIN_PWM);
 	pinEnable(pin, PIN_GPIO);
 }
 
