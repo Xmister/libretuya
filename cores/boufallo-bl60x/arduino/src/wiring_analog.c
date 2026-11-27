@@ -44,7 +44,10 @@ void analogWrite(pin_size_t pin_number, int value) {
 	const float duty = (float)value * 100.0f / (float)max_duty;
 	const uint32_t frequency = pwm_frequency();
 
-	if (pwm_pin[channel] != pin_number) {
+	// (Re)initialize when the channel belongs to another pin, or when pinMode() has taken this pin back as a GPIO
+	// (e.g. ESPHome's libretiny_pwm update_frequency() sets INPUT to force a re-init): otherwise the pad stays a
+	// GPIO and the output is dead.
+	if (pwm_pin[channel] != pin_number || !pinEnabled(pin, PIN_PWM)) {
 		if (bl_pwm_init(channel, pin->gpio, frequency) != 0)
 			return;
 		pwm_pin[channel] = pin_number;
